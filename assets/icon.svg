@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Фон -->
+  <circle cx="256" cy="256" r="256" fill="#4a86e8"/>
+  
+  <!-- Голова кота -->
+  <circle cx="256" cy="256" r="180" fill="#ffffff"/>
+  
+  <!-- Уши -->
+  <polygon points="150,120 180,200 100,180" fill="#ffffff"/>
+  <polygon points="362,120 332,200 412,180" fill="#ffffff"/>
+  
+  <!-- Глаза -->
+  <ellipse cx="200" cy="230" rx="30" ry="40" fill="#4a86e8"/>
+  <ellipse cx="312" cy="230" rx="30" ry="40" fill="#4a86e8"/>
+  
+  <!-- Зрачки -->
+  <circle cx="200" cy="220" r="15" fill="#000000"/>
+  <circle cx="312" cy="220" r="15" fill="#000000"/>
+  
+  <!-- Блики в глазах -->
+  <circle cx="195" cy="215" r="5" fill="#ffffff"/>
+  <circle cx="307" cy="215" r="5" fill="#ffffff"/>
+  
+  <!-- Нос -->
+  <polygon points="256,260 240,280 272,280" fill="#ff9999"/>
+  
+  <!-- Рот -->
+  <path d="M220,290 Q256,320 292,290" fill="none" stroke="#000000" stroke-width="3"/>
+  
+  <!-- Усы -->
+  <line x1="240" y1="280" x2="160" y2="270" stroke="#000000" stroke-width="2"/>
+  <line x1="240" y1="280" x2="160" y2="290" stroke="#000000" stroke-width="2"/>
+  <line x1="272" y1="280" x2="352" y2="270" stroke="#000000" stroke-width="2"/>
+  <line x1="272" y1="280" x2="352" y2="290" stroke="#000000" stroke-width="2"/>
+  
+  <!-- Звуковые волны (символизируют голосовое управление) -->
+  <path d="M100,256 Q80,256 60,256" fill="none" stroke="#ffffff" stroke-width="8"/>
+  <path d="M120,220 Q90,220 60,220" fill="none" stroke="#ffffff" stroke-width="8"/>
+  <path d="M120,292 Q90,292 60,292" fill="none" stroke="#ffffff" stroke-width="8"/>
+  
+  <path d="M412,256 Q432,256 452,256" fill="none" stroke="#ffffff" stroke-width="8"/>
+  <path d="M392,220 Q422,220 452,220" fill="none" stroke="#ffffff" stroke-width="8"/>
+  <path d="M392,292 Q422,292 452,292" fill="none" stroke="#ffffff" stroke-width="8"/>
+</svg>

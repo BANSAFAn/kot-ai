@@ -38,8 +38,7 @@ func (sm *SystemManager) CheckStatus() StatusInfo {
 	// Get executable path
 	exePath, err := os.Executable()
 	if err == nil {
-		exeDir := filepath.Dir(exePath)
-		exeName := filepath.Base(exePath)
+			exeName := filepath.Base(exePath)
 		info.ExecutableExists = true
 		info.StatusMessages = append(info.StatusMessages, StatusMessage{
 			Level:   "OK",

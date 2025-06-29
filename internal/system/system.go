@@ -2,7 +2,6 @@ package system
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -290,9 +289,7 @@ func (sm *SystemManager) ToggleMute() error {
 
 // TakeScreenshot делает снимок экрана и сохраняет его в указанный файл
 func (sm *SystemManager) TakeScreenshot(filePath string) error {
-	// Получаем размеры экрана
-	width := int(win.GetSystemMetrics(win.SM_CXSCREEN))
-	height := int(win.GetSystemMetrics(win.SM_CYSCREEN))
+
 
 	// Создаем команду для использования утилиты screencapture
 	cmd := exec.Command("powershell", "-command", fmt.Sprintf(

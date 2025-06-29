@@ -17,7 +17,7 @@ import (
 	"github.com/faiface/beep/speaker"
 	"github.com/gen2brain/malgo"
 	"github.com/hajimehoshi/go-mp3"
-	"github.com/hegedustibor/htgo-tts"
+	ttsengine "github.com/hegedustibor/htgo-tts"
 	"github.com/sashabaranov/go-openai"
 	"github.com/ztrue/tracerr"
 )
@@ -34,7 +34,7 @@ type VoiceManager struct {
 	mutex          sync.Mutex
 	openAIClient   *openai.Client
 	googleClient   *speech.Client
-	tts            *htgo-tts.Speech
+	tts            *ttsengine.Speech
 	wakeWordActive bool
 	callbacks      struct {
 		onCommand func(string)
@@ -90,7 +90,7 @@ func (vm *VoiceManager) Start() error {
 	}
 
 	// Инициализация TTS
-	vm.tts = &htgo-tts.Speech{
+	vm.tts = &ttsengine.Speech{
 		Folder:   "audio",
 		Language: vm.config.Language,
 	}

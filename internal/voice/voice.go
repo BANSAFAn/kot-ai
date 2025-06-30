@@ -12,11 +12,11 @@ import (
 	"time"
 
 	"cloud.google.com/go/speech/apiv1"
+	speechpb "cloud.google.com/go/speech/apiv1/speechpb"
 	"github.com/faiface/beep"
 	"github.com/faiface/beep/mp3"
 	"github.com/faiface/beep/speaker"
 	"github.com/gen2brain/malgo"
-	"github.com/hajimehoshi/go-mp3"
 	ttsengine "github.com/hegedustibor/htgo-tts"
 	"github.com/sashabaranov/go-openai"
 	"github.com/ztrue/tracerr"
@@ -112,7 +112,7 @@ func (vm *VoiceManager) Start() error {
 	vm.captureConfig.Alsa.NoMMap = 1
 
 	// Создание устройства захвата
-	device, err := malgo.InitDevice(vm.context, vm.captureConfig, malgo.DeviceCallbacks{
+	device, err := malgo.InitDevice(vm.context.Context, vm.captureConfig, malgo.DeviceCallbacks{
 		Data: vm.onAudioData,
 	})
 	if err != nil {
@@ -355,10 +355,10 @@ func (vm *VoiceManager) recognizeWithWhisper(audioData []byte) (string, error) {
 	resp, err := vm.openAIClient.CreateTranscription(
 		context.Background(),
 		openai.AudioRequest{
-			Model:    openai.Whisper1,
-			Filename: tmpFile,
-			Reader:   file,
-		},
+				Model:    openai.Whisper1,
+				Reader:   file,
+				FilePath: tmpFile,
+			},
 	)
 	if err != nil {
 		return "", tracerr.Wrap(err)

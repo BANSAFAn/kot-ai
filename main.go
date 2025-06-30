@@ -15,7 +15,10 @@ import (
 	"kot.ai/internal/system"
 )
 
+import "fmt"
+
 func main() {
+	fmt.Println("Application starting...")
 	// Parse command line arguments
 	checkStatus := flag.Bool("status", false, "Check application status")
 	flag.Parse()

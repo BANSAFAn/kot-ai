@@ -1,0 +1,34 @@
+kot.ai/internal/voice
+# kot.ai/internal/voice
+internal\voice\voice.go:28:24: undefined: malgo.AllocatedContext
+internal\voice\voice.go:29:24: undefined: malgo.Device
+internal\voice\voice.go:30:23: undefined: malgo.DeviceConfig
+internal\voice\voice.go:99:20: undefined: malgo.InitContext
+internal\voice\voice.go:99:43: undefined: malgo.ContextConfig
+internal\voice\voice.go:108:27: undefined: malgo.DefaultDeviceConfig
+internal\voice\voice.go:115:23: undefined: malgo.InitDevice
+internal\voice\voice.go:115:78: undefined: malgo.DeviceCallbacks
+ Том в устройстве C не имеет метки.
+ Серийный номер тома: 8AE7-A102
+
+ Содержимое папки C:\Users\baneronetwo\Documents\GitHub\kot-ai
+
+07/01/2025  12:26 PM    <DIR>          .
+07/01/2025  12:26 PM    <DIR>          ..
+06/28/2025  03:04 PM    <DIR>          .github
+06/26/2025  08:03 PM               456 .gitignore
+06/28/2025  03:04 PM    <DIR>          assets
+07/01/2025  12:26 PM               897 build.bat
+07/01/2025  12:26 PM               543 build_output.txt
+06/26/2025  08:04 PM             2,382 commands.txt
+07/01/2025  12:25 PM             2,489 go.mod
+07/01/2025  12:25 PM            27,369 go.sum
+06/28/2025  03:04 PM    <DIR>          internal
+06/29/2025  11:27 AM             1,084 LICENSE
+06/30/2025  12:14 PM             2,292 main.go
+06/26/2025  08:15 PM             4,283 main_test.go
+06/27/2025  10:35 AM             4,121 README.md
+06/27/2025  10:36 AM               639 run.bat
+06/28/2025  02:51 PM             2,048 status.bat
+              12 файлов         48,603 байт
+               5 папок  324,343,468,032 байт свободно

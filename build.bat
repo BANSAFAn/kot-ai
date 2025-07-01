@@ -22,7 +22,8 @@ if %ERRORLEVEL% neq 0 (
 
 REM Build the project
 echo Building project...
-go build -v -o kot.exe -ldflags="-H=windowsgui" .
+go build -v -o kot.exe -ldflags="-H=windowsgui" . > build_output.txt 2>&1
+dir >> build_output.txt
 if %ERRORLEVEL% neq 0 (
     echo Error: Build failed
     exit /b 1

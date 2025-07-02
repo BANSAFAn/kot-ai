@@ -14,7 +14,6 @@ import (
 	"cloud.google.com/go/speech/apiv1"
 	speechpb "cloud.google.com/go/speech/apiv1/speechpb"
 	"github.com/faiface/beep"
-	"github.com/faiface/beep/mp3"
 	"github.com/faiface/beep/speaker"
 	"github.com/gen2brain/malgo"
 	ttsengine "github.com/hegedustibor/htgo-tts"
@@ -112,7 +111,7 @@ func (vm *VoiceManager) Start() error {
 	vm.captureConfig.Alsa.NoMMap = 1
 
 	// Создание устройства захвата
-	device, err := malgo.InitDevice(vm.context.Context, vm.captureConfig, malgo.DeviceCallbacks{
+	device, err := malgo.InitDevice(vm.context, vm.captureConfig, malgo.DeviceCallbacks{
 		Data: vm.onAudioData,
 	})
 	if err != nil {
@@ -357,7 +356,6 @@ func (vm *VoiceManager) recognizeWithWhisper(audioData []byte) (string, error) {
 		openai.AudioRequest{
 				Model:    openai.Whisper1,
 				Reader:   file,
-				FilePath: tmpFile,
 			},
 	)
 	if err != nil {
@@ -378,14 +376,14 @@ func (vm *VoiceManager) recognizeWithGoogle(audioData []byte) (string, error) {
 	defer cancel()
 
 	// Отправляем запрос в Google Speech-to-Text API
-	resp, err := vm.googleClient.Recognize(ctx, &speechpb.RecognizeRequest{
-		Config: &speechpb.RecognitionConfig{
-			Encoding:        speechpb.RecognitionConfig_LINEAR16,
+	resp, err := vm.googleClient.Recognize(ctx, &RecognizeRequest{
+		Config: &RecognitionConfig{
+			Encoding:        RecognitionConfig_LINEAR16,
 			SampleRateHertz: 16000,
 			LanguageCode:    vm.config.Language,
 		},
-		Audio: &speechpb.RecognitionAudio{
-			AudioSource: &speechpb.RecognitionAudio_Content{Content: audioData},
+		Audio: &RecognitionAudio{
+			AudioSource: &RecognitionAudio_Content{Content: audioData},
 		},
 	})
 	if err != nil {

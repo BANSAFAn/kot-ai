@@ -14,6 +14,7 @@ import (
 	"cloud.google.com/go/speech/apiv1"
 	speechpb "cloud.google.com/go/speech/apiv1/speechpb"
 	"github.com/faiface/beep"
+	"github.com/faiface/beep/mp3"
 	"github.com/faiface/beep/speaker"
 	"github.com/gen2brain/malgo"
 	ttsengine "github.com/hegedustibor/htgo-tts"
@@ -111,9 +112,10 @@ func (vm *VoiceManager) Start() error {
 	vm.captureConfig.Alsa.NoMMap = 1
 
 	// Создание устройства захвата
-	device, err := malgo.InitDevice(vm.context, vm.captureConfig, malgo.DeviceCallbacks{
+	deviceCallbacks := malgo.DeviceCallbacks{
 		Data: vm.onAudioData,
-	})
+	}
+	device, err := malgo.InitDevice(vm.context, vm.captureConfig, &deviceCallbacks)
 	if err != nil {
 		vm.context.Uninit()
 		return tracerr.Wrap(err)
@@ -376,14 +378,14 @@ func (vm *VoiceManager) recognizeWithGoogle(audioData []byte) (string, error) {
 	defer cancel()
 
 	// Отправляем запрос в Google Speech-to-Text API
-	resp, err := vm.googleClient.Recognize(ctx, &RecognizeRequest{
-		Config: &RecognitionConfig{
-			Encoding:        RecognitionConfig_LINEAR16,
+	resp, err := vm.googleClient.Recognize(ctx, &speechpb.RecognizeRequest{
+		Config: &speechpb.RecognitionConfig{
+			Encoding:        speechpb.RecognitionConfig_LINEAR16,
 			SampleRateHertz: 16000,
 			LanguageCode:    vm.config.Language,
 		},
-		Audio: &RecognitionAudio{
-			AudioSource: &RecognitionAudio_Content{Content: audioData},
+		Audio: &speechpb.RecognitionAudio{
+			AudioSource: &speechpb.RecognitionAudio_Content{Content: audioData},
 		},
 	})
 	if err != nil {
@@ -529,7 +531,24 @@ func (vm *VoiceManager) playMP3(file io.ReadCloser) error {
 
 // playWAV воспроизводит WAV файл
 func (vm *VoiceManager) playWAV(file io.ReadCloser) error {
-	// Аналогично MP3, но с WAV декодером
-	// Для простоты используем тот же код, что и для MP3
-	return vm.playMP3(file)
+	// Декодируем WAV
+	streamer, format, err := wav.Decode(file)
+	if err != nil {
+		return tracerr.Wrap(err)
+	}
+	defer streamer.Close()
+
+	// Инициализируем динамик
+	speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/10))
+
+	// Воспроизводим
+	done := make(chan bool)
+	speaker.Play(beep.Seq(streamer, beep.Callback(func() {
+		done <- true
+	})))
+
+	// Ждем завершения воспроизведения
+	<-done
+
+	return nil
 }

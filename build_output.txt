@@ -1,14 +1,14 @@
+github.com/faiface/beep/wav
 kot.ai/internal/voice
 # kot.ai/internal/voice
-internal\voice\voice.go:28:24: undefined: malgo.AllocatedContext
-internal\voice\voice.go:29:24: undefined: malgo.Device
-internal\voice\voice.go:30:23: undefined: malgo.DeviceConfig
-internal\voice\voice.go:99:20: undefined: malgo.InitContext
-internal\voice\voice.go:99:43: undefined: malgo.ContextConfig
-internal\voice\voice.go:108:27: undefined: malgo.DefaultDeviceConfig
-internal\voice\voice.go:115:27: undefined: malgo.DeviceCallbacks
-internal\voice\voice.go:118:23: undefined: malgo.InitDevice
-internal\voice\voice.go:535:27: undefined: wav
+internal\voice\voice.go:29:24: undefined: malgo.AllocatedContext
+internal\voice\voice.go:30:24: undefined: malgo.Device
+internal\voice\voice.go:31:23: undefined: malgo.DeviceConfig
+internal\voice\voice.go:100:20: undefined: malgo.InitContext
+internal\voice\voice.go:100:43: undefined: malgo.ContextConfig
+internal\voice\voice.go:109:27: undefined: malgo.DefaultDeviceConfig
+internal\voice\voice.go:116:27: undefined: malgo.DeviceCallbacks
+internal\voice\voice.go:119:23: undefined: malgo.InitDevice
  Том в устройстве C не имеет метки.
  Серийный номер тома: 8AE7-A102
 
@@ -20,10 +20,10 @@ internal\voice\voice.go:535:27: undefined: wav
 06/26/2025  08:03 PM               456 .gitignore
 06/28/2025  03:04 PM    <DIR>          assets
 07/01/2025  12:26 PM               897 build.bat
-07/02/2025  07:47 PM               590 build_output.txt
+07/03/2025  10:05 AM               573 build_output.txt
 06/26/2025  08:04 PM             2,382 commands.txt
 07/01/2025  12:25 PM             2,489 go.mod
-07/01/2025  12:25 PM            27,369 go.sum
+07/02/2025  07:55 PM            27,194 go.sum
 06/28/2025  03:04 PM    <DIR>          internal
 06/29/2025  11:27 AM             1,084 LICENSE
 06/30/2025  12:14 PM             2,292 main.go
@@ -31,5 +31,5 @@ internal\voice\voice.go:535:27: undefined: wav
 06/27/2025  10:35 AM             4,121 README.md
 06/27/2025  10:36 AM               639 run.bat
 06/28/2025  02:51 PM             2,048 status.bat
-              12 файлов         48,650 байт
-               5 папок  330,351,673,344 байт свободно
+              12 файлов         48,458 байт
+               5 папок  330,738,798,592 байт свободно

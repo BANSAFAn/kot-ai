@@ -11,6 +11,7 @@ type Config struct {
 	AssistantConfig AssistantConfig `json:"assistant"`
 	VoiceConfig     VoiceConfig     `json:"voice"`
 	UIConfig        UIConfig        `json:"ui"`
+	MobileConfig    MobileConfig    `json:"mobile"`
 }
 
 // AssistantConfig содержит настройки ассистента
@@ -46,6 +47,16 @@ type UIConfig struct {
 	StartMinimized bool   `json:"start_minimized"`
 }
 
+// MobileConfig содержит настройки для мобильного подключения
+type MobileConfig struct {
+	Enabled       bool   `json:"enabled"`       // Включено ли мобильное подключение
+	USBEnabled    bool   `json:"usb_enabled"`    // Включено ли USB-подключение
+	ADBPath       string `json:"adb_path"`       // Путь к ADB (Android Debug Bridge)
+	WebUIEnabled  bool   `json:"webui_enabled"`  // Включен ли веб-интерфейс для мобильных устройств
+	WebUIPort     int    `json:"webui_port"`     // Порт для веб-интерфейса мобильных устройств
+	AutoConnect   bool   `json:"auto_connect"`   // Автоматически подключаться к устройству при запуске
+}
+
 // DefaultConfig возвращает конфигурацию по умолчанию
 func DefaultConfig() *Config {
 	homeDir, _ := os.UserHomeDir()
@@ -78,6 +89,14 @@ func DefaultConfig() *Config {
 			WebPort:        8080,
 			Theme:          "dark",
 			StartMinimized: false,
+		},
+		MobileConfig: MobileConfig{
+			Enabled:       false,
+			USBEnabled:    true,
+			ADBPath:       "",
+			WebUIEnabled:  true,
+			WebUIPort:     8081,
+			AutoConnect:   false,
 		},
 	}
 }

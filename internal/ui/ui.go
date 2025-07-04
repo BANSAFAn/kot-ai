@@ -2,6 +2,7 @@ package ui
 
 import (
 	"embed"
+	"encoding/base64"
 	"fmt"
 	"log"
 	"net/http"
@@ -10,12 +11,15 @@ import (
 	"path/filepath"
 	"runtime"
 	"sync"
+	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/zserge/lorca"
 	"github.com/ztrue/tracerr"
 
 	"kot.ai/internal/assistant"
+	"kot.ai/internal/mobile"
+	"kot.ai/internal/system"
 )
 
 //go:embed web
@@ -31,6 +35,7 @@ type UIManager struct {
 	clientMutex sync.Mutex
 	upgrader    websocket.Upgrader
 	isRunning   bool
+	mobileManager *mobile.MobileManager
 }
 
 // UIConfig содержит настройки пользовательского интерфейса
@@ -43,7 +48,7 @@ type UIConfig struct {
 }
 
 // NewUIManager создает новый экземпляр UIManager
-func NewUIManager(config UIConfig, assistant *assistant.Assistant) *UIManager {
+func NewUIManager(config UIConfig, assistant *assistant.Assistant, mobileManager *mobile.MobileManager) *UIManager {
 	return &UIManager{
 		config:    config,
 		assistant: assistant,
@@ -53,6 +58,7 @@ func NewUIManager(config UIConfig, assistant *assistant.Assistant) *UIManager {
 				return true // Разрешаем все источники для простоты
 			},
 		},
+		mobileManager: mobileManager,
 	}
 }
 
@@ -132,6 +138,7 @@ func (um *UIManager) startWebUI() error {
 	mux := http.NewServeMux()
 	mux.Handle("/", http.FileServer(http.Dir(tmpDir)))
 	mux.HandleFunc("/ws", um.handleWebSocket)
+	mux.HandleFunc("/mobile", um.handleMobileUI)
 
 	// Запускаем HTTP сервер
 	um.server = &http.Server{
@@ -279,9 +286,199 @@ func (um *UIManager) processMessage(message map[string]interface{}, conn *websoc
 			"config": um.config,
 		})
 
+	// Мобильные команды
+	case "chat":
+		// Получаем текст сообщения
+		messageText, ok := message["message"].(string)
+		if !ok {
+			return
+		}
+
+		// Отправляем сообщение ассистенту
+		response, err := um.assistant.ProcessCommand(messageText)
+		if err != nil {
+			log.Printf("Ошибка обработки сообщения: %v", err)
+			conn.WriteJSON(map[string]interface{}{
+				"type":  "error",
+				"message": err.Error(),
+			})
+			return
+		}
+
+		// Отправляем ответ клиенту
+		conn.WriteJSON(map[string]interface{}{
+			"type":    "chat",
+			"message": response,
+		})
+
+	case "system_info":
+		// Получаем информацию о системе
+		sysInfo, err := system.GetSystemInfo()
+		if err != nil {
+			log.Printf("Ошибка получения информации о системе: %v", err)
+			conn.WriteJSON(map[string]interface{}{
+				"type":  "error",
+				"message": err.Error(),
+			})
+			return
+		}
+
+		// Отправляем информацию клиенту
+		conn.WriteJSON(map[string]interface{}{
+			"type": "system_info",
+			"info": sysInfo,
+		})
+
+	case "execute":
+		// Получаем команду для выполнения
+		cmd, ok := message["command"].(string)
+		if !ok {
+			return
+		}
+
+		// Выполняем команду
+		output, err := system.ExecuteCommand(cmd)
+		if err != nil {
+			log.Printf("Ошибка выполнения команды: %v", err)
+			conn.WriteJSON(map[string]interface{}{
+				"type":  "error",
+				"message": err.Error(),
+			})
+			return
+		}
+
+		// Отправляем результат клиенту
+		conn.WriteJSON(map[string]interface{}{
+			"type":   "command_result",
+			"result": output,
+		})
+
+	case "screenshot":
+		// Делаем скриншот
+		tmpFile := filepath.Join(os.TempDir(), fmt.Sprintf("kot_screenshot_%d.png", time.Now().Unix()))
+		err := system.TakeScreenshot(tmpFile)
+		if err != nil {
+			log.Printf("Ошибка создания скриншота: %v", err)
+			conn.WriteJSON(map[string]interface{}{
+				"type":  "error",
+				"message": err.Error(),
+			})
+			return
+		}
+
+		// Читаем файл и кодируем в base64
+		imgData, err := os.ReadFile(tmpFile)
+		if err != nil {
+			log.Printf("Ошибка чтения скриншота: %v", err)
+			conn.WriteJSON(map[string]interface{}{
+				"type":  "error",
+				"message": err.Error(),
+			})
+			return
+		}
+
+		// Удаляем временный файл
+		os.Remove(tmpFile)
+
+		// Отправляем скриншот клиенту
+		conn.WriteJSON(map[string]interface{}{
+			"type": "screenshot",
+			"data": base64.StdEncoding.EncodeToString(imgData),
+		})
+
+	case "mobile_command":
+		// Получаем команду для мобильного устройства
+		cmd, ok := message["command"].(string)
+		if !ok || um.mobileManager == nil {
+			return
+		}
+
+		// Проверяем, подключено ли устройство
+		if !um.mobileManager.IsConnectedUSB() {
+			conn.WriteJSON(map[string]interface{}{
+				"type":  "error",
+				"message": "Нет подключенного USB-устройства",
+			})
+			return
+		}
+
+		// Выполняем команду на устройстве
+		output, err := um.mobileManager.ExecuteCommand(cmd)
+		if err != nil {
+			log.Printf("Ошибка выполнения команды на устройстве: %v", err)
+			conn.WriteJSON(map[string]interface{}{
+				"type":  "error",
+				"message": err.Error(),
+			})
+			return
+		}
+
+		// Отправляем результат клиенту
+		conn.WriteJSON(map[string]interface{}{
+			"type":   "command_result",
+			"result": output,
+		})
+
+	case "mobile_screenshot":
+		// Проверяем, подключено ли устройство
+		if um.mobileManager == nil || !um.mobileManager.IsConnectedUSB() {
+			conn.WriteJSON(map[string]interface{}{
+				"type":  "error",
+				"message": "Нет подключенного USB-устройства",
+			})
+			return
+		}
+
+		// Делаем скриншот устройства
+		tmpFile := filepath.Join(os.TempDir(), fmt.Sprintf("kot_mobile_screenshot_%d.png", time.Now().Unix()))
+		err := um.mobileManager.TakeScreenshot(tmpFile)
+		if err != nil {
+			log.Printf("Ошибка создания скриншота устройства: %v", err)
+			conn.WriteJSON(map[string]interface{}{
+				"type":  "error",
+				"message": err.Error(),
+			})
+			return
+		}
+
+		// Читаем файл и кодируем в base64
+		imgData, err := os.ReadFile(tmpFile)
+		if err != nil {
+			log.Printf("Ошибка чтения скриншота устройства: %v", err)
+			conn.WriteJSON(map[string]interface{}{
+				"type":  "error",
+				"message": err.Error(),
+			})
+			return
+		}
+
+		// Удаляем временный файл
+		os.Remove(tmpFile)
+
+		// Отправляем скриншот клиенту
+		conn.WriteJSON(map[string]interface{}{
+			"type": "screenshot",
+			"data": base64.StdEncoding.EncodeToString(imgData),
+		})
+
 	default:
 		log.Printf("Неизвестный тип сообщения: %s", msgType)
 	}
+}
+
+// handleMobileUI обрабатывает запросы к мобильному интерфейсу
+func (um *UIManager) handleMobileUI(w http.ResponseWriter, r *http.Request) {
+	// Читаем файл мобильного интерфейса
+	mobileHTML, err := os.ReadFile(filepath.Join("internal", "ui", "web", "mobile.html"))
+	if err != nil {
+		log.Printf("Ошибка чтения файла мобильного интерфейса: %v", err)
+		http.Error(w, "Ошибка загрузки мобильного интерфейса", http.StatusInternalServerError)
+		return
+	}
+
+	// Устанавливаем заголовки и отправляем содержимое
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Write(mobileHTML)
 }
 
 // extractWebFiles извлекает веб-файлы из встроенного FS

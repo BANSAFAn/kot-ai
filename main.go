@@ -10,6 +10,7 @@ import (
 
 	"kot.ai/internal/assistant"
 	"kot.ai/internal/config"
+	"kot.ai/internal/mobile"
 	"kot.ai/internal/ui"
 	"kot.ai/internal/voice"
 	"kot.ai/internal/system"
@@ -46,12 +47,17 @@ func main() {
 
 	// Инициализация компонентов
 	voiceManager := voice.NewVoiceManager(cfg.VoiceConfig)
+	mobileManager := mobile.NewMobileManager(cfg.MobileConfig)
 	assistant := assistant.NewAssistant(cfg.AssistantConfig, sys, voiceManager)
-	uiManager := ui.NewUIManager(cfg.UIConfig, assistant)
+	uiManager := ui.NewUIManager(cfg.UIConfig, assistant, mobileManager)
 
 	// Запуск компонентов
 	if err := voiceManager.Start(); err != nil {
 		log.Printf("Предупреждение: не удалось запустить голосовой модуль: %v", err)
+	}
+
+	if err := mobileManager.Start(); err != nil {
+		log.Printf("Предупреждение: не удалось запустить модуль мобильного управления: %v", err)
 	}
 
 	if err := uiManager.Start(); err != nil {
@@ -75,5 +81,6 @@ func main() {
 	assistant.Stop()
 	uiManager.Stop()
 	voiceManager.Stop()
+	mobileManager.Stop()
 	log.Println("KOT.AI успешно завершил работу.")
 }

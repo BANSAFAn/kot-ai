@@ -26,7 +26,7 @@ import (
 // VoiceManager управляет голосовыми функциями
 type VoiceManager struct {
 	config         VoiceConfig
-	context        *malgo.AllocatedContext
+	context        *malgo.Context
 	device         *malgo.Device
 	captureConfig  malgo.DeviceConfig
 	captureChan    chan []byte
@@ -97,7 +97,7 @@ func (vm *VoiceManager) Start() error {
 	}
 
 	// Инициализация аудио контекста
-	ctx, err := malgo.InitContext(nil, malgo.ContextConfig{}, func(message string) {
+	ctx, err := malgo.NewContext(nil, malgo.ContextConfig{}, func(message string) {
 		log.Printf("[Audio Log] %s\n", message)
 	})
 	if err != nil {
@@ -116,9 +116,9 @@ func (vm *VoiceManager) Start() error {
 	deviceCallbacks := malgo.DeviceCallbacks{
 		Data: vm.onAudioData,
 	}
-	device, err := malgo.InitDevice(vm.context, vm.captureConfig, &deviceCallbacks)
+	device, err := malgo.InitDevice(vm.context.Context, vm.captureConfig, &deviceCallbacks)
 	if err != nil {
-		vm.context.Uninit()
+		vm.context.Close()
 		return tracerr.Wrap(err)
 	}
 	vm.device = device
@@ -126,7 +126,7 @@ func (vm *VoiceManager) Start() error {
 	// Запуск устройства
 	if err := vm.device.Start(); err != nil {
 		vm.device.Uninit()
-		vm.context.Uninit()
+		vm.context.Close()
 		return tracerr.Wrap(err)
 	}
 
@@ -148,7 +148,7 @@ func (vm *VoiceManager) Stop() {
 	}
 
 	if vm.context != nil {
-		vm.context.Uninit()
+		vm.context.Close()
 		vm.context = nil
 	}
 

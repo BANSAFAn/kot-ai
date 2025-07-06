@@ -15,6 +15,10 @@ import (
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/ztrue/tracerr"
 
+	"kot.ai/internal/drawing"
+	"kot.ai/internal/bank"
+	"kot.ai/internal/steam"
+	"kot.ai/internal/swift"
 	"kot.ai/internal/system"
 	"kot.ai/internal/voice"
 )
@@ -336,6 +340,50 @@ func (a *Assistant) handleSpecialCommands(command string) (string, bool) {
 		}
 
 		return "История отключена в настройках", true
+	}
+
+	// Команда для рисования
+	if strings.Contains(cmd, "нарисуй") {
+		homeDir, _ := os.UserHomeDir()
+		drawingPath := filepath.Join(homeDir, "Pictures", fmt.Sprintf("drawing_%d.png", time.Now().Unix()))
+
+		err := drawing.Draw(drawingPath)
+		if err != nil {
+			return fmt.Sprintf("Не удалось нарисовать: %v", err), true
+		}
+
+		return fmt.Sprintf("Рисунок сохранен в %s", drawingPath), true
+	}
+
+	// Команда для Steam
+	if strings.Contains(cmd, "мои игры") {
+		games, err := steam.GetGames()
+		if err != nil {
+			return fmt.Sprintf("Не удалось получить список игр: %v", err), true
+		}
+
+		response := "Ваши игры в Steam:\n"
+		for _, game := range games {
+			response += fmt.Sprintf("- %s\n", game)
+		}
+
+		return response, true
+	}
+
+	// Команда для банка
+	if strings.Contains(cmd, "мой баланс") {
+		balance, err := bank.GetBalance()
+		if err != nil {
+			return fmt.Sprintf("Не удалось получить баланс: %v", err), true
+		}
+
+		return fmt.Sprintf("Ваш баланс: %.2f", balance), true
+	}
+
+	// Команда для Swift
+	if strings.Contains(cmd, "отправь деньги") {
+		// TODO: Parse amount and recipient from command
+		return "Функция отправки денег еще не реализована", true
 	}
 
 	// Команда для выхода

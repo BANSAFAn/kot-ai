@@ -166,38 +166,44 @@ func (sm *SystemManager) GetRunningProcesses() ([]map[string]interface{}, error)
 
 	result := make([]map[string]interface{}, 0, len(processes))
 	for _, p := range processes {
-		name, err := p.Name()
+		processInfo, err := sm.getProcessInfo(p)
 		if err != nil {
-			continue
+			continue // Пропускаем процессы, для которых не удалось получить информацию
 		}
-
-		createTime, err := p.CreateTime()
-		if err != nil {
-			continue
-		}
-
-		memPercent, err := p.MemoryPercent()
-		if err != nil {
-			continue
-		}
-
-		cpuPercent, err := p.CPUPercent()
-		if err != nil {
-			continue
-		}
-
-		processInfo := map[string]interface{}{
-			"pid":         p.Pid,
-			"name":        name,
-			"create_time": time.Unix(0, createTime*int64(time.Millisecond)),
-			"mem_percent": memPercent,
-			"cpu_percent": cpuPercent,
-		}
-
 		result = append(result, processInfo)
 	}
 
 	return result, nil
+}
+
+func (sm *SystemManager) getProcessInfo(p *process.Process) (map[string]interface{}, error) {
+	name, err := p.Name()
+	if err != nil {
+		return nil, err
+	}
+
+	createTime, err := p.CreateTime()
+	if err != nil {
+		return nil, err
+	}
+
+	memPercent, err := p.MemoryPercent()
+	if err != nil {
+		return nil, err
+	}
+
+	cpuPercent, err := p.CPUPercent()
+	if err != nil {
+		return nil, err
+	}
+
+	return map[string]interface{}{
+		"pid":         p.Pid,
+		"name":        name,
+		"create_time": time.Unix(0, createTime*int64(time.Millisecond)),
+		"mem_percent": memPercent,
+		"cpu_percent": cpuPercent,
+	}, nil
 }
 
 // KillProcess завершает процесс по PID

@@ -7,9 +7,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/baneronetwo/kot-ai/internal/bank"
-	"github.com/baneronetwo/kot-ai/internal/drawing"
-	"github.com/baneronetwo/kot-ai/internal/steam"
+	"kot.ai/internal/bank"
+	"kot.ai/internal/drawing"
+	"kot.ai/internal/steam"
 )
 
 // CommandHandler определяет функцию-обработчик для команды

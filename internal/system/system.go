@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/go-ole/go-ole"
-	"github.com/go-ole/go-ole/oleutil"
+	"github.com/moutend/go-wca/pkg/wca"
 	"github.com/shirou/gopsutil/v3/cpu"
 	"github.com/shirou/gopsutil/v3/disk"
 	"github.com/shirou/gopsutil/v3/host"
@@ -218,78 +218,96 @@ func (sm *SystemManager) KillProcess(pid int32) error {
 
 // SetVolume устанавливает громкость системы (0-100)
 func (sm *SystemManager) SetVolume(level int) error {
-	if level < 0 || level > 100 {
-		return tracerr.New("Уровень громкости должен быть от 0 до 100")
+	if level < 0 {
+		level = 0
+	} else if level > 100 {
+		level = 100
 	}
 
-	if !sm.initializedOLE {
-		err := ole.CoInitializeEx(0, ole.COINIT_APARTMENTTHREADED)
-		if err != nil {
-			return tracerr.Wrap(err)
-		}
-		sm.initializedOLE = true
-	}
+	return sm.setMasterVolume(float32(level) / 100.0)
+}
 
-	unknown, err := oleutil.CreateObject("WScript.Shell")
+// GetVolume возвращает текущий уровень громкости (0-100)
+func (sm *SystemManager) GetVolume() int {
+	volume, err := sm.getMasterVolume()
 	if err != nil {
-		return tracerr.Wrap(err)
+		return 0 // Возвращаем 0 в случае ошибки
 	}
-	defer unknown.Release()
-
-	wshell, err := unknown.QueryInterface(ole.IID_IDispatch)
-	if err != nil {
-		return tracerr.Wrap(err)
-	}
-	defer wshell.Release()
-
-	// Используем SendKeys для управления громкостью
-	for i := 0; i < 50; i++ { // Сначала уменьшаем громкость до минимума
-		_, err := oleutil.CallMethod(wshell, "SendKeys", "{VOLUME_DOWN}")
-		if err != nil {
-			return tracerr.Wrap(err)
-		}
-	}
-
-	// Затем устанавливаем нужную громкость
-	steps := level / 2 // Примерно 50 шагов от 0 до 100
-	for i := 0; i < steps; i++ {
-		_, err := oleutil.CallMethod(wshell, "SendKeys", "{VOLUME_UP}")
-		if err != nil {
-			return tracerr.Wrap(err)
-		}
-	}
-
-	return nil
+	return int(volume * 100)
 }
 
 // ToggleMute включает/выключает звук
 func (sm *SystemManager) ToggleMute() error {
+	return sm.toggleMasterMute()
+}
+
+// --- Вспомогательные функции для управления звуком --- 
+
+func (sm *SystemManager) getAudioEndpointVolume() (*wca.IAudioEndpointVolume, error) {
 	if !sm.initializedOLE {
-		err := ole.CoInitializeEx(0, ole.COINIT_APARTMENTTHREADED)
-		if err != nil {
-			return tracerr.Wrap(err)
+		if err := ole.CoInitializeEx(0, ole.COINIT_APARTMENTTHREADED); err != nil {
+			return nil, err
 		}
 		sm.initializedOLE = true
 	}
 
-	unknown, err := oleutil.CreateObject("WScript.Shell")
+	var mmde *wca.IMMDeviceEnumerator
+	if err := wca.CoCreateInstance(wca.CLSID_MMDeviceEnumerator, 0, wca.CLSCTX_ALL, wca.IID_IMMDeviceEnumerator, &mmde); err != nil {
+		return nil, err
+	}
+	defer mmde.Release()
+
+	var mmd *wca.IMMDevice
+	if err := mmde.GetDefaultAudioEndpoint(wca.ERender, wca.EConsole, &mmd); err != nil {
+		return nil, err
+	}
+	defer mmd.Release()
+
+	var aev *wca.IAudioEndpointVolume
+	if err := mmd.Activate(wca.IID_IAudioEndpointVolume, wca.CLSCTX_ALL, nil, &aev); err != nil {
+		return nil, err
+	}
+
+	return aev, nil
+}
+
+func (sm *SystemManager) setMasterVolume(level float32) error {
+	aev, err := sm.getAudioEndpointVolume()
 	if err != nil {
 		return tracerr.Wrap(err)
 	}
-	defer unknown.Release()
+	defer aev.Release()
 
-	wshell, err := unknown.QueryInterface(ole.IID_IDispatch)
+	return tracerr.Wrap(aev.SetMasterVolumeLevelScalar(level, nil))
+}
+
+func (sm *SystemManager) getMasterVolume() (float32, error) {
+	aev, err := sm.getAudioEndpointVolume()
+	if err != nil {
+		return 0, tracerr.Wrap(err)
+	}
+	defer aev.Release()
+
+	var level float32
+	if err := aev.GetMasterVolumeLevelScalar(&level); err != nil {
+		return 0, tracerr.Wrap(err)
+	}
+	return level, nil
+}
+
+func (sm *SystemManager) toggleMasterMute() error {
+	aev, err := sm.getAudioEndpointVolume()
 	if err != nil {
 		return tracerr.Wrap(err)
 	}
-	defer wshell.Release()
+	defer aev.Release()
 
-	_, err = oleutil.CallMethod(wshell, "SendKeys", "{VOLUME_MUTE}")
-	if err != nil {
+	var muted bool
+	if err := aev.GetMute(&muted); err != nil {
 		return tracerr.Wrap(err)
 	}
 
-	return nil
+	return tracerr.Wrap(aev.SetMute(!muted, nil))
 }
 
 // TakeScreenshot делает снимок экрана и сохраняет его в указанный файл

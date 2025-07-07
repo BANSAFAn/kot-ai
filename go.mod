@@ -9,6 +9,7 @@ require (
 	github.com/go-ole/go-ole v1.2.6
 	github.com/gorilla/websocket v1.5.0
 	github.com/hegedustibor/htgo-tts v0.0.0-20230402053941-cd8d1a158135
+	github.com/moutend/go-wca v0.3.0
 	github.com/sashabaranov/go-openai v1.15.3
 	github.com/shirou/gopsutil/v3 v3.23.7
 	github.com/stretchr/testify v1.8.4
@@ -34,7 +35,6 @@ require (
 	github.com/hajimehoshi/oto v0.7.1 // indirect
 	github.com/hajimehoshi/oto/v2 v2.3.1 // indirect
 	github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 // indirect
-	github.com/moutend/go-wca v0.3.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c // indirect
